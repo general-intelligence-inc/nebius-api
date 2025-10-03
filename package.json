@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@bufbuild/protobuf": "1.10.0",
+    "@connectrpc/connect": "1.4.0"
+  },
+  "name": "y",
+  "description": "This repository contains the `.proto` files defining the gRPC API for [Nebius AI Cloud](https://nebius.com) services. These files describe the structure of requests and responses exchanged between your client application and Nebius services using Protocol Buffers.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,12 @@
+version: v2
+plugins:
+  - remote: buf.build/connectrpc/es:v1.4.0
+    out: ../tensorpath-base/be/src/providers/nebius/sdk
+    opt:
+      - target=ts
+    include_imports: true
+  - remote: buf.build/bufbuild/es:v1.10.0
+    out: ../tensorpath-base/be/src/providers/nebius/sdk
+    opt:
+      - target=ts
+    include_imports: true
