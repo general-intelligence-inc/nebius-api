@@ -3,8 +3,8 @@ syntax = "proto3";
 package nebius.compute.v1;
 
 import "buf/validate/validate.proto";
-import "nebius/common/v1/metadata.proto";
 import "nebius/annotations.proto";
+import "nebius/common/v1/metadata.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/compute/v1";
 option java_multiple_files = true;
@@ -56,7 +56,10 @@ message DiskSpec {
 
   // The type of disk defines the performance and reliability characteristics of the block device.
   // For details, see https://docs.nebius.com/compute/storage/types#disks-types
-  DiskType type = 6 [(buf.validate.field).required = true, (field_behavior) = IMMUTABLE];
+  DiskType type = 6 [
+    (buf.validate.field).required = true,
+    (field_behavior) = IMMUTABLE
+  ];
 
   // Source for disk creation.
   // Boot disk must be created from an image https://docs.nebius.com/compute/storage/manage#boot
@@ -108,6 +111,12 @@ message DiskStatus {
 
   string state_description = 2;
 
+  // Current read-write owner (instance ID).
+  // May refer to an instance in any state, including stopped
+  // (this semantics is preserved for backward compatibility).
+  // Reassigned on disk detach, instance deletion, or ownership transfer.
+  // Ownership transfer occurs when this disk is explicitly attached to another instance
+  // or when a VM with this disk attached starts while the current owner is stopped.
   string read_write_attachment = 3;
 
   repeated string read_only_attachments = 4;
@@ -122,6 +131,15 @@ message DiskStatus {
   int64 block_size_bytes = 8;
 
   SourceImageCPUArchitecture source_image_cpu_architecture = 9;
+
+  message LockState {
+    // Disk is locked for deletion and for read-write operations while image is being created.
+    // Here is the list of these images.
+    repeated string images = 1;
+  }
+
+  // Indicates resources that prevent the disk from being attached as read-write.
+  LockState lock_state = 11;
 }
 
 message DiskEncryption {
@@ -130,7 +148,6 @@ message DiskEncryption {
     DISK_ENCRYPTION_UNSPECIFIED = 0;
 
     // Enables encryption using the platform's default root key from KMS.
-    // Available for blank disks only.
     // Available for disks with NETWORK_SSD_NON_REPLICATED and NETWORK_SSD_IO_M3 types only.
     DISK_ENCRYPTION_MANAGED = 1;
   }

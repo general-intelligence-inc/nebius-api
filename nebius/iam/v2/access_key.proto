@@ -4,8 +4,8 @@ package nebius.iam.v2;
 
 import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
-import "nebius/common/v1/metadata.proto";
 import "nebius/annotations.proto";
+import "nebius/common/v1/metadata.proto";
 import "nebius/iam/v1/access.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/iam/v2";
@@ -30,7 +30,8 @@ message AccessKeySpec {
 
   string description = 3;
 
-  // Specifies how the secret will be delivered upon creation. This field is immutable — it cannot be changed after the resource is created.
+  // Specifies how the secret will be delivered upon creation. This field is immutable — it cannot be changed after the resource is
+  // created.
   SecretDeliveryMode secret_delivery_mode = 4 [(field_behavior) = IMMUTABLE];
 }
 
@@ -74,4 +75,6 @@ message AccessKeyStatus {
   string aws_access_key_id = 5;
 
   string secret = 6 [(sensitive) = true];
+
+  string secret_reference_id = 7;
 }

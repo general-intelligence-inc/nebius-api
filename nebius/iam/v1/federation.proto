@@ -3,8 +3,8 @@ syntax = "proto3";
 package nebius.iam.v1;
 
 import "buf/validate/validate.proto";
-import "nebius/common/v1/metadata.proto";
 import "nebius/annotations.proto";
+import "nebius/common/v1/metadata.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/iam/v1";
 option java_multiple_files = true;
@@ -12,8 +12,6 @@ option java_outer_classname = "FederationProto";
 option java_package = "ai.nebius.pub.iam.v1";
 
 message Federation {
-  option (resource_behavior) = UNNAMED;
-
   common.v1.ResourceMetadata metadata = 1 [(buf.validate.field).required = true];
 
   FederationSpec spec = 2 [(buf.validate.field).required = true];
@@ -26,7 +24,10 @@ message FederationSpec {
 
   reserved 3;
 
-  bool active = 4;
+  bool active = 4 [
+    deprecated = true,
+    (field_deprecation_details) = {description: "'active' field ignored. Use 'Activate/Deactivate' methods to manage federation state. A newly created federation is always active by default."}
+  ];
 
   oneof settings {
     option (buf.validate.oneof).required = true;
@@ -45,4 +46,17 @@ message SamlSettings {
 }
 
 message FederationStatus {
+  enum State {
+    UNSPECIFIED = 0;
+
+    ACTIVE = 1;
+
+    INACTIVE = 2;
+  }
+
+  State state = 3;
+
+  int32 users_count = 1;
+
+  int32 certificates_count = 2;
 }

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package nebius.storage.v1;
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
 import "buf/validate/validate.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
 import "nebius/common/v1/operation.proto";
@@ -40,7 +40,12 @@ service BucketService {
 }
 
 message GetBucketRequest {
-  string id = 1 [(buf.validate.field).required = true];
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (nid) = {
+      resource: ["storagebucket"]
+    }
+  ];
 
   reserved 2;
 }
@@ -82,11 +87,21 @@ message DeleteBucketRequest {
 }
 
 message PurgeBucketRequest {
-  string id = 1 [(buf.validate.field).required = true];
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (nid) = {
+      resource: ["storagebucket"]
+    }
+  ];
 }
 
 message UndeleteBucketRequest {
-  string id = 1 [(buf.validate.field).required = true];
+  string id = 1 [
+    (buf.validate.field).required = true,
+    (nid) = {
+      resource: ["storagebucket"]
+    }
+  ];
 }
 
 message ListBucketsRequest {

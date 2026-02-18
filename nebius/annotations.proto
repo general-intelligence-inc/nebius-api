@@ -9,6 +9,12 @@ option java_multiple_files = true;
 option java_outer_classname = "AnnotationsProto";
 option java_package = "ai.nebius.pub";
 
+extend google.protobuf.FileOptions {
+  // Contains additional information about the planned deprecation of a file.
+  // Used along with `option deprecated = true`.
+  DeprecationDetails file_deprecation_details = 1194;
+}
+
 extend google.protobuf.ServiceOptions {
   // Specifies the domain prefix for the service endpoint.
   // For example, `option (api_service_name) = "compute";` makes the service
@@ -28,6 +34,12 @@ extend google.protobuf.MethodOptions {
   DeprecationDetails method_deprecation_details = 1194;
 
   MethodPySDKSettings method_py_sdk = 1195;
+
+  // If true, the method requires the reset mask to be sent along with the request.
+  // If false, the reset mask will be sent only in resource Update methods by default.
+  // If set, the reset mask will be calculated relative to the root of the request,
+  // the mask sanitization will be applied on the gateway as usual.
+  bool send_reset_mask = 1196;
 }
 
 extend google.protobuf.MessageOptions {
@@ -57,6 +69,16 @@ extend google.protobuf.FieldOptions {
   DeprecationDetails field_deprecation_details = 1194;
 
   FieldPySDKSettings field_py_sdk = 1195;
+
+  // Field NID settings for fields annotated with this option.
+  // When present on string fields (including lists and maps), values are treated as NIDs and
+  // warnings are emitted when they are not valid. These warnings are separate from server-side validation.
+  //
+  // For metadata fields, this describes which parent resource types are allowed in
+  // `metadata.parent_id`. For string fields, this describes which resource types are allowed
+  // in the NID itself.
+  // See `NIDFieldSettings` for more details.
+  NIDFieldSettings nid = 1196;
 }
 
 extend google.protobuf.OneofOptions {
@@ -68,6 +90,10 @@ extend google.protobuf.OneofOptions {
 
 extend google.protobuf.EnumOptions {
   EnumPySDKSettings enum_py_sdk = 1191;
+
+  // Contains additional information about the planned deprecation of an enum.
+  // Used along with `option deprecated = true`.
+  DeprecationDetails enum_deprecation_details = 1194;
 }
 
 extend google.protobuf.EnumValueOptions {
@@ -171,6 +197,23 @@ message DeprecationDetails {
   // The date when this method, service, message or field will stop working (format: YYYY-MM-DD)
   string effective_at = 1;
 
-  // A description to help users understand the reason for deprecation and suggest alternatives
+  // A description to help users understand the reason for deprecation and suggest alternatives.
+  // By default, this message will be shown in the CLI, Terraform, and SDKs as is.
   string description = 2;
+
+  // Override base description for CLI, specify possible alternative method
+  // Example: "Please use the 'iam v2 access-key' command instead. All existing keys remain accessible through the new command."
+  string description_cli = 3;
+}
+
+message NIDFieldSettings {
+  // Fields annotated with this option are treated as NIDs.
+  // `resource` lists allowed NID resource types (prefixes). Leave empty to accept any type.
+  // Validation only produces warnings.
+  repeated string resource = 1;
+
+  // For metadata fields, `parent_resource` lists allowed parent resource types for `metadata.parent_id`.
+  // Leave empty to allow any type. Validation only produces warnings.
+  // Typically set on the resource message; request-level overrides are supported.
+  repeated string parent_resource = 2;
 }

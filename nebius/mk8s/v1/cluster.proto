@@ -29,29 +29,45 @@ message ClusterSpec {
 message ControlPlaneSpec {
   // Desired Kubernetes version of the cluster. For now only acceptable format is
   // `<major>.<minor>` like "1.31". Option for patch version update will be added later.
-  string version = 1 [(buf.validate.field) = { string: { pattern: "|^\\d\\.\\d\\d$" } }];
+  string version = 1 [(buf.validate.field) = {
+    string: {pattern: "|^\\d\\.\\d\\d$"}
+  }];
 
   // Nebius VPC Subnet ID where control plane instances will be located.
   // Also will be default NodeGroup subnet.
-  string subnet_id = 2 [(buf.validate.field).required = true, (field_behavior) = IMMUTABLE];
+  string subnet_id = 2 [
+    (buf.validate.field).required = true,
+    (field_behavior) = IMMUTABLE
+  ];
 
+  // Specification of endpoints of cluster control plane.
   ControlPlaneEndpointsSpec endpoints = 3;
 
   // Number of instances in etcd cluster.
   // 3 by default.
   // Control plane with `etcd_cluster_size: 3` called "Highly Available" ("HA"), because it's Kubernetes API
   // will be available despite a failure of one control plane instance.
-  int64 etcd_cluster_size = 4 [(buf.validate.field) = { int64: { in: [ 0, 1, 3 ] } }];
+  int64 etcd_cluster_size = 4 [(buf.validate.field) = {
+    int64: {
+      in: [
+        0,
+        1,
+        3
+      ]
+    }
+  }];
+
+  // Specify configuration of the pushing k8s audit logs into service logs and show it in the UI.
+  // By default cluster will be created without it.
+  AuditLogsSpec audit_logs = 5 [(field_behavior) = MEANINGFUL_EMPTY_VALUE];
 }
 
 message ControlPlaneEndpointsSpec {
-  // Specification of public endpoint for control plane.
-  // Set value to empty, to enable it.
+  // Public endpoint specification. When set, a public endpoint is created.
   PublicEndpointSpec public_endpoint = 1 [(field_behavior) = MEANINGFUL_EMPTY_VALUE];
 }
 
-message PublicEndpointSpec {
-}
+message PublicEndpointSpec {}
 
 message KubeNetworkSpec {
   // CIDR blocks for Service ClusterIP allocation.
@@ -63,11 +79,11 @@ message KubeNetworkSpec {
   // Empty value treated as ["/16"].
   repeated string service_cidrs = 1 [
     (buf.validate.field) = {
-      repeated: { max_items: 1 },
+      repeated: {max_items: 1}
       cel: [
         {
-          id: "string.valid_cidr",
-          message: "value must be a CIDR block or prefix length from \"/12\" to \"/28\"",
+          id: "string.valid_cidr"
+          message: "value must be a CIDR block or prefix length from \"/12\" to \"/28\""
           expression: "this.all(x, x.matches('^(.*)/(1[2-9]|2[0-8])$'))"
         }
       ]
@@ -75,6 +91,8 @@ message KubeNetworkSpec {
     (field_behavior) = IMMUTABLE
   ];
 }
+
+message AuditLogsSpec {}
 
 message ClusterStatus {
   enum State {
@@ -97,9 +115,10 @@ message ClusterStatus {
 
 message ControlPlaneStatus {
   // Actual Kubernetes and configuration version.
-  // Version have format `<major>.<minor>.<patch>-nebius-cp.<infra_version>` like "1.30.0-nebius-cp.3".
-  // Where <major>.<minor>.<patch> is Kubernetes version and <infra_version> is version of control plane infrastructure and configuration,
-  // which update may include bug fixes, security updates and new features of components running on control plane, like CCM or Cluster Autoscaler.
+  // Version has format `<major>.<minor>.<patch>-nebius-cp.<infra_version>` like
+  // "1.30.0-nebius-cp.3", where `<major>.<minor>.<patch>` is Kubernetes version and `<infra_version>` is version of control plane
+  // infrastructure and configuration, updating of which may include bug fixes, security updates and new features of components running on
+  // control plane, like CCM or Cluster Autoscaler.
   string version = 1;
 
   ControlPlaneStatusEndpoints endpoints = 2;

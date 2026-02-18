@@ -7,12 +7,14 @@ import "google/protobuf/duration.proto";
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
 import "nebius/mk8s/v1alpha1/instance_template.proto";
-import "nebius/mk8s/v1alpha1/condition.proto";
 
+// Migrate to v1.
+option deprecated = true;
 option go_package = "github.com/nebius/gosdk/proto/nebius/mk8s/v1alpha1";
 option java_multiple_files = true;
 option java_outer_classname = "NodeGroupProto";
 option java_package = "ai.nebius.pub.mk8s.v1alpha1";
+option (file_deprecation_details) = {description: "migrate to v1"};
 
 // NodeGroup represents Kubernetes node pool
 message NodeGroup {
@@ -32,7 +34,12 @@ message NodeGroupSpec {
   oneof size {
     option (buf.validate.oneof).required = true;
 
-    int64 fixed_node_count = 2 [(buf.validate.field) = { int64: { lte: 100, gte: 0 } }];
+    int64 fixed_node_count = 2 [(buf.validate.field) = {
+      int64: {
+        lte: 100
+        gte: 0
+      }
+    }];
 
     NodeGroupAutoscalingSpec autoscaling = 5;
   }
@@ -40,6 +47,9 @@ message NodeGroupSpec {
   NodeTemplate template = 3 [(buf.validate.field).required = true];
 
   NodeGroupDeploymentStrategy strategy = 4;
+
+  // Parameters for nodes auto repair.
+  NodeGroupAutoRepairSpec auto_repair = 6;
 }
 
 message NodeTemplate {
@@ -56,24 +66,29 @@ message NodeTemplate {
 
   // OS version that will be used to create the boot disk of Compute Instances in the NodeGroup.
   // Supported platform / k8s version /  OS / driver presets combinations
-  //   gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm, cpu-e1, cpu-e2, cpu-d3:
-  //     drivers_preset: ""
-  //       k8s: 1.30 → "ubuntu22.04"
-  //       k8s: 1.31 → "ubuntu22.04" (default), "ubuntu24.04"
-  //   gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm:
-  //     drivers_preset: "cuda12" (CUDA 12.4)
-  //       k8s: 1.30, 1.31 → "ubuntu22.04"
-  //     drivers_preset: "cuda12.4"
-  //       k8s: 1.31 → "ubuntu22.04"
-  //     drivers_preset: "cuda12.8"
-  //       k8s: 1.31 → "ubuntu24.04"
-  //   gpu-b200-sxm:
-  //     drivers_preset: ""
-  //       k8s: 1.30, 1.31 → "ubuntu24.04"
-  //     drivers_preset: "cuda12" (CUDA 12.8)
-  //       k8s: 1.30, 1.31 → "ubuntu24.04"
-  //     drivers_preset: "cuda12.8"
-  //       k8s: 1.31 → "ubuntu24.04"
+  // - gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm, cpu-e1, cpu-e2, cpu-d3:
+  //   - drivers_preset: ""
+  //     - k8s: 1.30 → "ubuntu22.04"
+  //     - k8s: 1.31 → "ubuntu22.04" (default), "ubuntu24.04"
+  // - gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm:
+  //   - drivers_preset: "cuda12" (CUDA 12.4)
+  //     - k8s: 1.30, 1.31 → "ubuntu22.04"
+  //   - drivers_preset: "cuda12.4"
+  //     - k8s: 1.31 → "ubuntu22.04"
+  //   - drivers_preset: "cuda12.8"
+  //     - k8s: 1.31 → "ubuntu24.04"
+  // - gpu-b200-sxm:
+  //   - drivers_preset: ""
+  //     - k8s: 1.30, 1.31 → "ubuntu24.04"
+  //   - drivers_preset: "cuda12" (CUDA 12.8)
+  //     - k8s: 1.30, 1.31 → "ubuntu24.04"
+  //   - drivers_preset: "cuda12.8"
+  //     - k8s: 1.31 → "ubuntu24.04"
+  // - gpu-b200-sxm-a:
+  //   - drivers_preset: ""
+  //     - k8s: 1.31 → "ubuntu24.04"
+  //   - drivers_preset: "cuda12.8"
+  //     - k8s: 1.31 → "ubuntu24.04"
   string os = 16;
 
   GpuClusterSpec gpu_cluster = 4;
@@ -85,9 +100,9 @@ message NodeTemplate {
   // cloud-init user-data. Must contain at least one SSH key.
   string cloud_init_user_data = 6 [(sensitive) = true];
 
-  // the Nebius service account whose credentials will be available on the nodes of the group.
-  // With these credentials, it is possible to make `nebius` CLI or public API requests from the nodes without the need for extra authentication.
-  // This service account is also used to make requests to container registry.
+  // the Nebius service account whose credentials will be available on the nodes of the group. With these credentials, it is possible to
+  // make `nebius` CLI or public API requests from the nodes without the need for extra authentication. This service account is also used to
+  // make requests to container registry.
   //
   // `resource.serviceaccount.issueAccessToken` permission is required to use this field.
   string service_account_id = 10;
@@ -108,11 +123,13 @@ message NodeMetadataTemplate {
 message GpuSettings {
   // Identifier of the predefined set of drivers included in the ComputeImage deployed on ComputeInstances that are part of the NodeGroup.
   // Supported presets for different platform / k8s version combinations:
-  //   gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm:
-  //     k8s: 1.30 → "cuda12" (CUDA 12.4)
-  //     k8s: 1.31 → "cuda12" (CUDA 12.4), "cuda12.4", "cuda12.8"
-  //   gpu-b200-sxm:
-  //     k8s: 1.31 → "cuda12" (CUDA 12.8), "cuda12.8"
+  // - gpu-l40s-a, gpu-l40s-d, gpu-h100-sxm, gpu-h200-sxm:
+  //   - k8s: 1.30 → "cuda12" (CUDA 12.4)
+  //   - k8s: 1.31 → "cuda12" (CUDA 12.4), "cuda12.4", "cuda12.8"
+  // - gpu-b200-sxm:
+  //   - k8s: 1.31 → "cuda12" (CUDA 12.8), "cuda12.8"
+  // - gpu-b200-sxm-a:
+  //   - k8s: 1.31 → "cuda12.8"
   string drivers_preset = 1 [(buf.validate.field).required = true];
 }
 
@@ -124,15 +141,14 @@ message NetworkInterfaceTemplate {
   // Public IPv4 address associated with the interface.
   PublicIPAddress public_ip_address = 1 [(field_behavior) = MEANINGFUL_EMPTY_VALUE];
 
-  // Subnet ID that will be attached to a node cloud intstance network interface.
+  // Subnet ID that will be attached to a node cloud instance network interface.
   // By default control plane subnet_id used.
   // Subnet should be located in the same network with control plane and have same parent ID as cluster.
   string subnet_id = 3 [(field_behavior) = NON_EMPTY_DEFAULT];
 }
 
 // Describes a public IP address.
-message PublicIPAddress {
-}
+message PublicIPAddress {}
 
 message AttachedFilesystemSpec {
   enum AttachMode {
@@ -159,23 +175,32 @@ message ExistingFilesystem {
 }
 
 message NodeGroupAutoscalingSpec {
-  int64 min_node_count = 1 [(buf.validate.field) = { int64: { lte: 100, gte: 0 } }];
+  int64 min_node_count = 1 [(buf.validate.field) = {
+    int64: {
+      lte: 100
+      gte: 0
+    }
+  }];
 
-  int64 max_node_count = 2 [(buf.validate.field) = { int64: { lte: 100, gte: 0 } }];
+  int64 max_node_count = 2 [(buf.validate.field) = {
+    int64: {
+      lte: 100
+      gte: 0
+    }
+  }];
 
   option (buf.validate.message) = {
     cel: [
       {
-        id: "autoscaling.protovalidate.message",
-        message: "min_node_count must be less or equal than max_node_count",
+        id: "autoscaling.protovalidate.message"
+        message: "min_node_count must be less or equal than max_node_count"
         expression: "this.min_node_count <= this.max_node_count"
       }
     ]
   };
 }
 
-message PreemptibleSpec {
-}
+message PreemptibleSpec {}
 
 // See https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 message NodeTaint {
@@ -242,6 +267,39 @@ message PercentOrCount {
   }
 }
 
+message NodeGroupAutoRepairSpec {
+  // Conditions that determine whether a node should be auto repaired.
+  repeated NodeAutoRepairCondition conditions = 4;
+}
+
+message NodeAutoRepairCondition {
+  // Node condition type.
+  string type = 1 [(buf.validate.field).required = true];
+
+  // Node condition status.
+  ConditionStatus status = 2;
+
+  oneof trigger {
+    option (buf.validate.oneof).required = true;
+
+    // The duration after which the node is automatically repaired if the condition remains in the specified status.
+    google.protobuf.Duration timeout = 3;
+
+    // When true, disables the default auto-repair condition rules.
+    bool disabled = 4;
+  }
+}
+
+enum ConditionStatus {
+  CONDITION_STATUS_UNSPECIFIED = 0;
+
+  TRUE = 1;
+
+  FALSE = 2;
+
+  UNKNOWN = 3;
+}
+
 message NodeGroupStatus {
   enum State {
     STATE_UNSPECIFIED = 0;
@@ -273,14 +331,6 @@ message NodeGroupStatus {
   // Total number of nodes that successfully joined the cluster and are ready to serve workloads.
   // Both outdated and up-to-date nodes are counted.
   int64 ready_node_count = 6;
-
-  repeated Condition conditions = 50 [
-    deprecated = true,
-    (field_deprecation_details) = {
-      effective_at: "2025-08-01",
-      description: "it is not implemented well, messages should be used instead"
-    }
-  ];
 
   // Show that changes are in flight
   bool reconciling = 100;

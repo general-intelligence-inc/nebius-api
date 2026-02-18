@@ -5,23 +5,23 @@ package nebius.iam.v1;
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
 import "nebius/common/v1/operation.proto";
-import "nebius/iam/v1/access_key.proto";
 import "nebius/iam/v1/access.proto";
+import "nebius/iam/v1/access_key.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/iam/v1";
 option java_multiple_files = true;
 option java_outer_classname = "AccessKeyServiceProto";
 option java_package = "ai.nebius.pub.iam.v1";
 
-// Access keys API v1 is depricated. It's known to malfunction under certain conditions.
-// Use Access keys API v2 instead. Access keys create by API v1 are available using Access keys API v2.
+// Access keys management [deprecated]
 service AccessKeyService {
   option (api_service_name) = "cpl.iam";
   option deprecated = true;
 
   option (service_deprecation_details) = {
-    effective_at: "2026-09-01",
-    description: "Access keys API v1 is deprecated, use the v2 version instead. Keys produced by API v1 are available using v2."
+    effective_at: "2026-09-01"
+    description: "Access keys v1 API is deprecated. Please use the v2 API instead. All existing keys remain accessible through the v2 API."
+    description_cli: "Please use the 'iam v2 access-key' command instead. All existing keys remain accessible through the new command."
   };
 
   rpc Create(CreateAccessKeyRequest) returns (common.v1.Operation);
@@ -77,7 +77,7 @@ message ListAccessKeysRequest {
 
   // Specifies the maximum number of items to return in the response.
   // Default value: 10
-  optional int64 page_size = 2;
+  int64 page_size = 2;
 
   // Token for pagination, allowing the retrieval of the next set of results.
   string page_token = 3;

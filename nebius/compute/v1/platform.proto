@@ -28,6 +28,16 @@ message PlatformSpec {
   bool allow_preset_change = 5;
 
   string short_human_readable_name = 10;
+
+  int32 gpu_memory_gibibytes = 11 [
+    deprecated = true,
+    (field_deprecation_details) = {
+      effective_at: "2026-02-10"
+      description: "Use field 'gpu_memory_gigabytes' instead"
+    }
+  ];
+
+  int32 gpu_memory_gigabytes = 12;
 }
 
 message Preset {
@@ -45,7 +55,13 @@ message PresetResources {
 
   int32 gpu_count = 4;
 
-  int32 gpu_memory_gibibytes = 6;
+  int32 gpu_memory_gibibytes = 6 [
+    deprecated = true,
+    (field_deprecation_details) = {
+      effective_at: "2026-01-10"
+      description: "Use field 'platform.spec.gpu_memory_gibibytes' instead"
+    }
+  ];
 }
 
 message PlatformStatus {

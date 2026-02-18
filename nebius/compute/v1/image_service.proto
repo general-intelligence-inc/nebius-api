@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package nebius.compute.v1;
 
+import "buf/validate/validate.proto";
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
+import "nebius/common/v1/operation.proto";
 import "nebius/common/v1/operation_service.proto";
 import "nebius/compute/v1/image.proto";
 import "nebius/compute/v1/operation_service.proto";
@@ -29,8 +31,23 @@ service ImageService {
   // Lists all images in a specific parent resource.
   rpc List(ListImagesRequest) returns (ListImagesResponse);
 
+  // Creates a new image resource.
+  rpc Create(CreateImageRequest) returns (common.v1.Operation);
+
+  // Updates an existing image resource. Only specific fields can be updated, such as labels and name.
+  rpc Update(UpdateImageRequest) returns (common.v1.Operation);
+
+  // Deletes an existing image resource by its ID.
+  rpc Delete(DeleteImageRequest) returns (common.v1.Operation);
+
   // Lists all operations that were performed within a specific parent resource.
   rpc ListOperationsByParent(ListOperationsByParentRequest) returns (common.v1.ListOperationsResponse);
+
+  // Lists all public images available in a specific region. Regions doc https://docs.nebius.com/overview/regions
+  // Public images can contain specific labels in metadata like:
+  // "os_name: Ubuntu", "os_version: 22.04 LTS", "linux_kernel: 5.15", "cuda_toolkit: 13.0"
+  // "nvidia_gpu_drivers: 550", "networking_package: OFED 23.10"
+  rpc ListPublic(ListPublicRequest) returns (ListImagesResponse);
 }
 
 message GetImageRequest {
@@ -53,14 +70,40 @@ message ListImagesRequest {
   string filter = 4 [
     deprecated = true,
     (field_deprecation_details) = {
-      effective_at: "2025-06-16",
+      effective_at: "2025-06-16"
       description: "it is not implemented, filtering could be done on client side"
     }
   ];
+}
+
+message CreateImageRequest {
+  common.v1.ResourceMetadata metadata = 1;
+
+  ImageSpec spec = 2;
+}
+
+message UpdateImageRequest {
+  common.v1.ResourceMetadata metadata = 1;
+
+  ImageSpec spec = 2;
+}
+
+message DeleteImageRequest {
+  string id = 1;
 }
 
 message ListImagesResponse {
   repeated Image items = 1;
 
   string next_page_token = 2;
+}
+
+message ListPublicRequest {
+  // Region name (eu-north2, us-central1, eu-west1, etc.)
+  // For details, see https://docs.nebius.com/overview/regions
+  string region = 1 [(buf.validate.field).required = true];
+
+  int64 page_size = 2;
+
+  string page_token = 3;
 }

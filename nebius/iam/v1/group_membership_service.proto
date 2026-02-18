@@ -6,8 +6,8 @@ import "buf/validate/validate.proto";
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
 import "nebius/common/v1/operation.proto";
-import "nebius/iam/v1/group_membership.proto";
 import "nebius/iam/v1/group.proto";
+import "nebius/iam/v1/group_membership.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/iam/v1";
 option java_multiple_files = true;
@@ -52,7 +52,7 @@ message ListGroupMembershipsRequest {
   string parent_id = 1 [(buf.validate.field).required = true];
 
   // Default value: 10
-  optional int64 page_size = 2;
+  int64 page_size = 2;
 
   string page_token = 3;
 
@@ -64,7 +64,7 @@ message ListMemberOfRequest {
   string subject_id = 1 [(buf.validate.field).required = true];
 
   // Default value: 10
-  optional int64 page_size = 2;
+  int64 page_size = 2;
 
   string page_token = 3;
 

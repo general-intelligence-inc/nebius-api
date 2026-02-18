@@ -2,12 +2,14 @@ syntax = "proto3";
 
 package nebius.storage.v1;
 
-import "google/protobuf/timestamp.proto";
 import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 import "nebius/annotations.proto";
 import "nebius/common/v1/metadata.proto";
 import "nebius/storage/v1/base.proto";
 import "nebius/storage/v1/bucket_counters.proto";
+import "nebius/storage/v1/bucket_policy.proto";
+import "nebius/storage/v1/cors.proto";
 import "nebius/storage/v1/lifecycle.proto";
 
 option go_package = "github.com/nebius/gosdk/proto/nebius/storage/v1";
@@ -40,6 +42,9 @@ message BucketSpec {
 
   LifecycleConfiguration lifecycle_configuration = 5;
 
+  // Cross-origin resource sharing configuration.
+  CORSConfiguration cors = 8;
+
   // Storage class to use by default for uploads to the bucket. It may be overridden by `x-amz-storage-class` header.
   // If not set - STANDARD is used as a default storage class.
   StorageClass default_storage_class = 9;
@@ -49,11 +54,33 @@ message BucketSpec {
   // or the one provided via the `x-amz-storage-class` header.
   StorageClass override_storage_class = 10 [
     deprecated = true,
-    (field_deprecation_details) = { effective_at: "2025-12-01", description: "Use `default_storage_class` with `force_storage_class` instead" }
+    (field_deprecation_details) = {
+      effective_at: "2025-12-01"
+      description: "Use `default_storage_class` with `force_storage_class` instead"
+    }
   ];
 
   // Flag to force usage of default_storage_class, ignoring `x-amz-storage-class` header.
   bool force_storage_class = 11;
+
+  // Object audit logging specifies which requests must be logged - none, all or mutational only.
+  ObjectAuditLogging object_audit_logging = 12;
+
+  enum ObjectAuditLogging {
+    OBJECT_AUDIT_LOGGING_UNSPECIFIED = 0;
+
+    // Logging is disabled.
+    NONE = 1;
+
+    // Logging enabled only for mutating requests.
+    MUTATE_ONLY = 2;
+
+    // Logging enabled for all requests.
+    ALL = 3;
+  }
+
+  // Bucket policy specifies granular permissions for a bucket.
+  BucketPolicy bucket_policy = 13;
 }
 
 message BucketStatus {
